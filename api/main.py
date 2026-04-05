@@ -3,12 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any
 from contextlib import asynccontextmanager
-from mcp_client import MCPClient
+from MCP.client import MCPClient
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    server_script_path: str = "../mcp/main.py"
+    server_script_path: str = "MCP/server.py"
 
 settings = Settings()
 
@@ -62,4 +62,9 @@ async def process_query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        "main:app",
+        host="localhost",
+        port=8000,
+        reload=True
+    )
