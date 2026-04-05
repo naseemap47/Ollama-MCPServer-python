@@ -1,9 +1,15 @@
 # Ollama-MCPServer-python
 
-## How to Run
+## Install
+```bash
+uv venv
+uv sync
+```
+
+## Run
 ```bash
 cd api/
 ```
 ```bash
-uvicorn main:app --reload
+python3 main.py
 ```
