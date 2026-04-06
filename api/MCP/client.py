@@ -136,7 +136,6 @@ class MCPClient:
                 tools=self.tools,
                 think="high"
             )
-            print("Got Result.."*5)
             return result
         except Exception as e:
             self.logger.error(f"Error calling LLM: {e}")

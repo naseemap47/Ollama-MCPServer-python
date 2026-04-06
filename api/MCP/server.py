@@ -2,6 +2,7 @@ from mcp.server.fastmcp import FastMCP
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.retrievers import WikipediaRetriever
+from langchain_community.retrievers import ArxivRetriever
 from dotenv import load_dotenv
 
 # Load env
@@ -31,6 +32,7 @@ async def read_url(url: str) -> str:
 async def web_search(query: str):
     """
     Web Search Tool to search and read docs, articles and News from web.
+    For Wikipedia search use wiki_search tool.
     
     Args:
         query: The query to search for (eg. "Who is Elon Musk ?", "How to integrate chroma db with langchain ?")
@@ -59,7 +61,31 @@ async def wiki_search(query: str):
         extracted text from wikipedia about the query
     """
     retriever = WikipediaRetriever()
-    docs = retriever.invoke(query)
+    docs = await retriever.invoke(query)
+    if len(docs) == 0:
+        return "No results found"
+    else:
+        text = ""
+        for doc in docs:
+            text += doc.page_content
+        return text
+
+@mcp.tool()
+async def arxiv_search(query: str):
+    """
+    ArXiv search tool to search about research papers from ArXiv.
+
+    Args:
+        query: The query to search for (eg. "Expain me about 1605.08386 research paper.", "give me details about Transformers from Ai model architecture")
+    
+    Returns:
+        extracted text from ArXiv about the query
+    """
+    retriever = ArxivRetriever(
+        load_max_docs=2,
+        get_full_documents=True,
+    )
+    docs = await retriever.invoke(query)
     if len(docs) == 0:
         return "No results found"
     else:
