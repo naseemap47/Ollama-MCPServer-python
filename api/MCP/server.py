@@ -1,13 +1,16 @@
 from mcp.server.fastmcp import FastMCP
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.retrievers import WikipediaRetriever
+from dotenv import load_dotenv
 
+# Load env
+load_dotenv()
+
+# MCP - FastAPI
 mcp = FastMCP("docs")
 
-USER_AGENT = "docs-app/1.0"
-
-async def search_web(query: str) -> list | None:
-    # """ Search the query in web using DuckDuckGo Search"""
+async def search_web_links(query: str) -> list | None:
     try:
         search = DuckDuckGoSearchResults(output_format="list", num_results=4)
         search_result = search.invoke(query)
@@ -35,7 +38,7 @@ async def web_search(query: str):
     Returns:
         extracted text
     """
-    web_results = await search_web(query)
+    web_results = await search_web_links(query)
     if len(web_results) == 0:
         return "No results found"
     else:
@@ -45,9 +48,25 @@ async def web_search(query: str):
         return text
 
 @mcp.tool()
-def get_weather(city: str):
-    """Get the current weather for a city."""
-    return f"The weather in {city} is sunny."
+async def wiki_search(query: str):
+    """
+    Wikipedia search tool to search and and get the details about the query
+
+    Args:
+        query: The query to search for (eg. "Who is Elon Musk ?", "Japan history")
+    
+    Returns:
+        extracted text from wikipedia about the query
+    """
+    retriever = WikipediaRetriever()
+    docs = retriever.invoke(query)
+    if len(docs) == 0:
+        return "No results found"
+    else:
+        text = ""
+        for doc in docs:
+            text += doc.page_content
+        return text
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

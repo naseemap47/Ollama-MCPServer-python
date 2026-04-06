@@ -102,17 +102,6 @@ class MCPClient:
                         try:
                             result = await self.session.call_tool(tool_name, tool_args)
                             self.logger.info(f"Tool: {tool_name}\nResult: {result}")
-                            # self.messages.append(
-                            #     {
-                            #         "role": "user",
-                            #         "content": [
-                            #             {
-                            #                 "type": "tool_result",
-                            #                 "content": result.content,
-                            #             }
-                            #         ],
-                            #     }
-                            # )
                             assistant_message = {
                                 "role": "tool",
                                 'content': str(result.content) 
@@ -129,7 +118,6 @@ class MCPClient:
                         "content": response.message.content
                     }
                     self.messages.append(assistant_message)
-                    # await self.log_conversation(self.messages)
                     break
             
             return self.messages

@@ -5,10 +5,11 @@ from typing import Dict, Any
 from contextlib import asynccontextmanager
 from MCP.client import MCPClient
 from pydantic_settings import BaseSettings
+import os
 
 
 class Settings(BaseSettings):
-    server_script_path: str = "MCP/server.py"
+    server_script_path: str = os.path.join("MCP", "server.py")
 
 settings = Settings()
 
