@@ -28,13 +28,12 @@ function App() {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
-    const previousMessages = [...messages, userMessage];
-    setMessages(previousMessages);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/query', {
+      const response = await fetch('http://localhost:8000/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,26 +41,68 @@ function App() {
         body: JSON.stringify({ query: input }),
       });
 
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error('Network response was not ok');
       }
 
-      const data = await response.json();
-      
-      if (data.messages && data.messages.length > 0) {
-        if (data.messages[0].role === 'user' && data.messages[0].content === input) {
-            const serverMessages: Message[] = data.messages;
-            if (serverMessages.length >= 2 && serverMessages[0].role === 'user') {
-                const newMessages = serverMessages.slice(1);
-                setMessages([...previousMessages, ...newMessages]);
-            } else {
-                setMessages([...previousMessages, ...serverMessages]);
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let pendingBuffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        pendingBuffer += decoder.decode(value, { stream: true });
+        const events = pendingBuffer.split('\n\n');
+        pendingBuffer = events.pop() || '';
+
+        for (const event of events) {
+          if (event.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(event.substring(6));
+              
+              if (data.type === 'chunk') {
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMsg = newMessages[newMessages.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    lastMsg.content += data.text;
+                  } else {
+                    newMessages.push({ role: 'assistant', content: data.text });
+                  }
+                  return newMessages;
+                });
+              } else if (data.type === 'tool_call') {
+                setMessages(prev => [
+                   ...prev, 
+                   { role: 'tool', content: `Executing ${data.tool_name}...` }, 
+                   { role: 'assistant', content: '' } // Next text stream goes here
+                ]);
+              } else if (data.type === 'tool_result') {
+                 setMessages(prev => {
+                    const newMessages = [...prev];
+                    for (let i = newMessages.length - 1; i >= 0; i--) {
+                        if (newMessages[i].role === 'tool') {
+                            newMessages[i].content = data.result;
+                            break;
+                        }
+                    }
+                    return newMessages;
+                 });
+              } else if (data.type === 'error') {
+                 setMessages(prev => [...prev, { role: 'assistant', content: `**Error**: ${data.message}` }]);
+              } else if (data.type === 'end') {
+                 setIsLoading(false);
+              }
+            } catch (e) {
+               console.error("Failed parsing SSE chunk", e);
             }
-        } else {
-            setMessages([...previousMessages, ...data.messages]);
+          }
         }
       }
-      
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { role: 'assistant', content: '**Error**: Failed to communicate with server.' }]);

@@ -34,6 +34,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+from fastapi.responses import StreamingResponse
+import json
+
 @app.post("/query")
 async def process_query(request: QueryRequest):
     """Process a query and return the response"""
@@ -42,6 +45,18 @@ async def process_query(request: QueryRequest):
         return {"messages": messages}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/stream")
+async def stream_query(request: QueryRequest):
+    """Process a query and return the response as a stream of Server-Sent Events"""
+    async def event_generator():
+        try:
+            async for event in app.state.client.process_query_stream(request.query):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 if __name__ == "__main__":
