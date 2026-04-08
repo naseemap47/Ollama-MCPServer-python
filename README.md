@@ -23,5 +23,8 @@ python3 main.py
 ```
 ### Frontend
 ```bash
+cd frontend/
+```
+```bash
 npm run dev
 ```
