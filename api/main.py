@@ -1,15 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Dict, Any
 from contextlib import asynccontextmanager
 from MCP.client import MCPClient
-from pydantic_settings import BaseSettings
-import os
+from utils.config import Settings, QueryRequest
 
-
-class Settings(BaseSettings):
-    server_script_path: str = os.path.join("MCP", "server.py")
 
 settings = Settings()
 
@@ -39,17 +33,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-class QueryRequest(BaseModel):
-    query: str
-
-class Message(BaseModel):
-    role: str
-    content: Any
-
-class ToolCall(BaseModel):
-    name: str
-    args: Dict[str, Any]
 
 @app.post("/query")
 async def process_query(request: QueryRequest):
