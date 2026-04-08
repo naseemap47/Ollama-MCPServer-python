@@ -9,9 +9,7 @@ export default function ChatMessage({ message }: { message: Message }) {
   if (message.role === 'tool') return null;
 
   // Sometimes models generate tables without proper newlines before the header, or stringify tables into single lines.
-  // Heuristic: replace " | |" with " |\n|" to reconstruct rows.
   let content = message.content || '*Thinking...*';
-  content = content.replace(/ \| \|/g, ' |\n|');
   
   return (
     <div className={`message-row ${isUser ? 'user' : 'assistant'}`}>

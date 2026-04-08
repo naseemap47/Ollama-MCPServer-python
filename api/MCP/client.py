@@ -214,7 +214,7 @@ class MCPClient:
                     self.messages.append(assistant_message)
                     break
                     
-            # yield {"type": "end"}
+            yield {"type": "end"}
 
         except Exception as e:
             self.logger.error(f"Error processing query stream: {e}")

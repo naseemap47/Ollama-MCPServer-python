@@ -69,7 +69,10 @@ function App() {
                   const newMessages = [...prev];
                   const lastMsg = newMessages[newMessages.length - 1];
                   if (lastMsg.role === 'assistant') {
-                    lastMsg.content += data.text;
+                    newMessages[newMessages.length - 1] = { 
+                        ...lastMsg, 
+                        content: lastMsg.content + data.text 
+                    };
                   } else {
                     newMessages.push({ role: 'assistant', content: data.text });
                   }
@@ -86,7 +89,7 @@ function App() {
                     const newMessages = [...prev];
                     for (let i = newMessages.length - 1; i >= 0; i--) {
                         if (newMessages[i].role === 'tool') {
-                            newMessages[i].content = data.result;
+                            newMessages[i] = { ...newMessages[i], content: data.result };
                             break;
                         }
                     }
