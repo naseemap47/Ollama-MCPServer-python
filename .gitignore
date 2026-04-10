@@ -220,3 +220,6 @@ __marimo__/
 # Experiments
 experiment.ipynb
 experiment.py
+
+# log file
+api/log.txt

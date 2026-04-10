@@ -88,8 +88,18 @@ class MCPClient:
                 # response a tool call
                 if response.message.tool_calls:
                     assistant_message = {
-                        "role": "assistant",
-                        "content": response.message.content
+                        "role": response.message.role,
+                        "thinking": response.message.thinking,
+                        "tools": [
+                            {
+                            'type': 'function',
+                            'function': {
+                                'name': tool.function.name,
+                                'arguments': tool.function.arguments,
+                            }
+                        }
+                        for tool in response.message.tool_calls
+                        ]
                     }
                     self.logger.info(f"Tool Call:\n{assistant_message}")
                     self.messages.append(assistant_message)
@@ -114,7 +124,7 @@ class MCPClient:
                 # reposnse a text msg
                 else:
                     assistant_message = {
-                        "role": "assistant",
+                        "role": response.message.role,
                         "content": response.message.content
                     }
                     self.messages.append(assistant_message)

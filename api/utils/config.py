@@ -16,5 +16,5 @@ class Message(BaseModel):
 
 class ToolCall(BaseModel):
     name: str
-    args: Dict[str, Any]
+    args: Dict[Any, Any]
 

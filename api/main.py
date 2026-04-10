@@ -43,6 +43,23 @@ async def process_query(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/tools")
+async def get_tools():
+    """Get the list of avaliable MCP tools"""
+    try:
+        tools = await app.state.client.get_mcp_tools()
+        return {
+            "tools": [
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "input_schema": tool.inputSchema,
+                }
+                for tool in tools
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
